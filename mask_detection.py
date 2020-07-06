@@ -104,6 +104,7 @@ def predict():
             maskdata ='Mask On'
         else:
             maskdata = 'No Mask'
+        os.remove(os.path.join(basepath, 'uploads', secure_filename(f.filename)))
         return maskdata
     return None
 
