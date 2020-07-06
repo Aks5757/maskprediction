@@ -13,13 +13,12 @@
 
 <body>
  <div class="login">
-	<h1>Select Model</h1>
+	<h1>Select AI/ML Model</h1>
      <form action="{{ url_for('model')}}"method="post">
-        <label for="model">Choose a ML Model:</label>
+        <label for="model">Choose a Mask Detection way:</label>
         <select id="model" name="model">
-            <option value="iris" id="iris">Iris Model</option>
-            <option value="stock_sentiment" id="stock">Stock_Sentiment</option>
-            <option value="mask" id="mask">Image2Text</option>
+            <option value="InputFile_MaskPrediction" id="InputMask">InputFile</option>
+            <option value="Webcam_MaskPrediction" id="webcam">Webcam</option>
         </select>
         <input type="submit" />
      </form>
