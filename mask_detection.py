@@ -1,5 +1,5 @@
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response
 
 from flask import redirect, url_for
 import os
@@ -8,14 +8,19 @@ from werkzeug.utils import secure_filename
 import tensorflow.keras
 from PIL import Image, ImageOps
 import numpy as np
+from camera import VideoCamera
 
 # Disable scientific notation for clarity
 np.set_printoptions(suppress=True)
 
+def gen(camera):
+    while True:
+        #get camera frame
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 # Load the model
 mask_model = tensorflow.keras.models.load_model('keras_model.h5')
-
-#masmodel = load_model('keras_model.h5')
 
 app = Flask(__name__)
 
@@ -29,14 +34,30 @@ def model():
     # Main page
     ml_models = [str(x) for x in request.form.values()]
     print("ml_model--->>>",ml_models)
-    if ml_models[0]=='mask':
+    if ml_models[0]=='InputFile_MaskPrediction':
         return redirect(url_for("mask_detect"))
+    if ml_models[0]=='Webcam_MaskPrediction':
+        return redirect(url_for("stream"))
 
 @app.route('/mask_detect',methods=['GET'])
 def mask_detect():
-    # Image2Text page
+    # InputFile page
     return render_template('mask.html')
 
+@app.route('/stream',methods=['GET'])
+def stream():
+    # Webcam page
+    return render_template('stream.html')
+
+
+@app.route('/webstream')
+def webstream():
+    '''
+    For rendering results on HTML GUI
+    '''
+    print("web strem start opening")
+    return Response(gen(VideoCamera()),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
@@ -49,6 +70,7 @@ def predict():
         file_path = os.path.join(
             basepath, 'uploads', secure_filename(f.filename))
         f.save(file_path)
+
         print("filepath ->>>>",file_path)
         # Make prediction
 
@@ -60,6 +82,7 @@ def predict():
         # resize the image to a 224x224 with the same strategy as in TM2:
         # resizing the image to be at least 224x224 and then cropping from the center
         size = (224, 224)
+        print("Image type is", type(image))
         image = ImageOps.fit(image, size, Image.ANTIALIAS)
 
         # turn the image into a numpy array
