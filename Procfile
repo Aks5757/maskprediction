@@ -1,1 +1,1 @@
-web: gunicorn mask_detection:app
+web: gunicorn mask_detection:app --preload
